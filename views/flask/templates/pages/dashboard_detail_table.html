@@ -1,0 +1,31 @@
+{% extends "base_dashboard.html" %}
+{% block content_table %}
+<h2>IRBankデータテーブル</h2>
+<div class="table-responsive">
+    <table class="table table-sm ">
+        <thead>
+            <tr>
+                <th scope="col">企業名</th>
+                <th scope="col">年度</th>
+                <th scope="col">売上高</th>
+                <th scope="col">営業利益率</th>
+                <th scope="col">EPS</th>
+                <th scope="col">自己資本比率</th>
+                <th scope="col">営業活動によるCF</th>
+                <th scope="col">現金等</th>
+                <th scope="col">一株配当</th>
+                <th scope="col">配当性向</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in datasets: %}
+            <tr>
+                {% for col in row: %}
+                    <td>{{ col }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

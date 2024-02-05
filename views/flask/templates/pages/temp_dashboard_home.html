@@ -1,0 +1,57 @@
+{% extends "base_dashboard.html" %}
+
+{% block content_graph %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+<h1 class="h2">Dashboard</h1>
+<div class="btn-toolbar mb-2 mb-md-0">
+  <div class="btn-group mr-2">
+    <button class="btn btn-sm btn-outline-secondary">Share</button>
+    <button class="btn btn-sm btn-outline-secondary">Export</button>
+  </div>
+  <button class="btn btn-sm btn-outline-secondary dropdown-toggle">
+    <span data-feather="calendar"></span>
+    This week
+  </button>
+</div>
+</div>
+
+<canvas class="my-4" id="myChart" width="900" height="380"></canvas>
+{% endblock %}
+
+
+{% block content_table %}
+高配当銘柄の情報を検索します。<br>
+証券コードを入力してください。
+<form action="/" method="GET">
+    <input text="text", name="company_code_select" size="30">
+    <input type="submit" value="submit">
+</form>
+
+<table class="table table-sm ">
+    <thead>
+        <tr>
+            <th scope="col">証券コード</th>
+            <th scope="col">企業名</th>
+            <th scope="col">株価</th>
+            <th scope="col">配当率</th>
+            <th scope="col">配当ランク</th>
+            <th scope="col">更新日</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in companies_data: %}
+        <tr>
+            {% for col in row: %}
+            {% if col == 1 %}
+            <form action="/" method="post">
+                <td><input type="submit" name="company_code" value={{ row[col] }}></td>
+            </form>
+            {% else %}
+            <td>{{ row[col] }}</td>
+            {% endif %}
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
