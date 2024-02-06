@@ -73,16 +73,20 @@ def table_item_list() -> List[str]:
     return items
 
 
-def main_check_companies_list():
+def main_check_companies_list(debug_flg=False):
     dao_company_list = fetch_companies_list()
-    print({'companies_list': dao_company_list})
+    if debug_flg:
+        print({'companies_list': dao_company_list})
 
 
-def main_ir_scraping():
+def main_ir_scraping(debug_flg=False):
+
     dao_company_list = fetch_companies_list()
-    company_code_list = [9986, 9110]
-    # company_code_list = [9986]
-    # company_code_list = dao_company_list[1201:1301]
+
+    if debug_flg:
+        company_code_list = [9986, 9110]
+    else:
+        company_code_list = dao_company_list[1001:1002]
 
     table_items = table_item_list()
 
@@ -90,13 +94,14 @@ def main_ir_scraping():
     for index, company_code in enumerate(company_code_list):
         # scraping
         company_datasets = CompanyData()
-        fetch_IR_bank = FetchDataFromIRBank(company_datasets, company_code)
-        fetch_IR_bank.fetch_main_soup(delay=1)
+        fetch_ir_bank = FetchDataFromIRBank(company_datasets, company_code)
+        fetch_ir_bank.fetch_main_soup(delay=1)
 
         for table_item in table_items:
-            # table_item = table_items[1]
-            print(company_code, table_item)
-            fetch_IR_bank.fetch_table_data(table_item)
+            if debug_flg:
+                # table_item = table_items[1]
+                print(company_code, table_item)
+            fetch_ir_bank.fetch_table_data(table_item)
 
         # write database
         for company in company_datasets.companies:
@@ -110,15 +115,18 @@ def main_ir_scraping():
             # test write csv
             # fetch_IR_bank.test_to_csv(c_code, tb_name)
 
-        print(index, 'delete object')
-        del company_datasets, fetch_IR_bank
+        if debug_flg:
+            print(index, 'delete object')
+
+        del company_datasets, fetch_ir_bank
 
     gc.collect()
 
 
 if __name__ == '__main__':
-    main_check_companies_list()
-    main_ir_scraping()
+    debug = False
+    main_check_companies_list(debug)
+    main_ir_scraping(debug)
 
 
 

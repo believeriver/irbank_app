@@ -3,7 +3,7 @@ import sys
 import os
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-print(os.path.dirname(os.path.abspath(__file__)))
+# print(os.path.dirname(os.path.abspath(__file__)))
 
 from controllers.scraping_url_yahoofinace import CompanyData, FetchDataFromYahooFinance
 from models.companies import Company
@@ -19,15 +19,16 @@ def fetch_index_date(c_list: CompanyData):
 
 
 if __name__ == '__main__':
+    debug_flg = True
 
     company_list = CompanyData()
-
+    start_index = 1
     max_index, update_date = fetch_index_date(company_list)
     print(max_index, update_date)
 
-    # test max_index=1
-    start_index = 40
-    max_index = 40
+    if debug_flg:
+        max_index = 1
+
     for i in range(start_index, max_index+1):
         print('page=', i)
         fetch_yahoo_finance = FetchDataFromYahooFinance(i, company_list)
@@ -45,7 +46,9 @@ if __name__ == '__main__':
             c_rank = company['company_rank']
             c_date = company['company_rank_date']
 
-            # print(c_code, c_name)
+            if debug_flg:
+                print(c_code, c_name)
+
             company = Company.get_or_create(
                 int(c_code), c_name, c_stock, float(c_dividend), int(c_rank), str(c_date)
             )

@@ -2,6 +2,7 @@ log
 config/start_flask_service
 config/start_streamlit
 config/ufw_settings
+sqlite3db/IRBank_database.sql
 sqlite3db/test/
 sqlite3db/controllers/sample
 venv
