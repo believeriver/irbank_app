@@ -14,11 +14,16 @@ from sqlite3db.controllers.dao_fetch_japanstock import IRBankDB
 from scraping.models.companies import Company
 import config.settings
 from views.flask.controllers.lib.utils_graph import create_ir_graph_list, create_stock_graph
+from flask_caching import Cache
 
 
 app = Flask(__name__,
             template_folder='../templates',
             static_folder='../static')
+cache = Cache(app)
+
+app.config['CACHE_TYPE'] = 'simple'  # シンプルなメモリキャッシュを使用
+app.config['CACHE_DEFAULT_TIMEOUT'] = 300  # キャッシュの有効期限を300秒に設定
 
 
 class WebServer(object):
@@ -45,6 +50,7 @@ def me() -> str:
 
 
 @app.route("/", methods=["GET", "POST"])
+@cache.cached(timeout=60)  # キャッシュの有効期限を60秒に設定
 def hello() -> str:
     company_code_select = request.args.get("company_code_select")
     # print(company_code_select)
