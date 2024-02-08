@@ -14,6 +14,9 @@
 
     <!-- Custom styles for this template -->
     <link href="../static/bootstrap/dashboard.css" rel="stylesheet">
+
+    <!-- CSS for loader -->
+    <link href="../static/loader.css" rel="stylesheet">
   </head>
 
   <body>
@@ -21,21 +24,29 @@
     {% include 'snippets/navbar.html' %}
     {% endblock navbar %}
 
-    <div class="container-fluid">
-      <div class="row">
+    <div id="loader">
+      <div class="d-flex justify-content-center align-items-center" style="height: 100vh;">
+        <div class="loader"></div>
+      </div>
+    </div>
 
-        <nav class="col-md-2 d-none d-md-block bg-light sidebar">
-          {% include 'snippets/sidebar.html' %}
-        </nav>
+    <div id="content" style="display: none;">
+      <div class="container-fluid">
+        <div class="row">
 
-        <main role="main" class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4">
-          {% block content_graph %}
-          {% endblock %}
+          <nav class="col-md-2 d-none d-md-block bg-light sidebar">
+            {% include 'snippets/sidebar.html' %}
+          </nav>
 
-          {% block content_table %}
-          {% endblock %}
+          <main role="main" class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4">
+            {% block content_graph %}
+            {% endblock %}
 
-        </main>
+            {% block content_table %}
+            {% endblock %}
+
+          </main>
+        </div>
       </div>
     </div>
 
@@ -52,6 +63,9 @@
     <script>
       feather.replace()
     </script>
+
+   <!-- JavaScript　for loader -->
+   <script src="../static/loader.js"></script>
 
   </body>
 
