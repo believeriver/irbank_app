@@ -16,6 +16,23 @@ from sqlite3db.controllers.fetch_japan_stock import JapanStockModel
 # logger = logging.getLogger(__name__)
 
 
+def fetch_stock_price_form_yfinance_api(company_code, start='2010-01-01', end=datetime.date.today(), span=30):
+    if company_code is None:
+        return None
+
+    dataset = JapanStockModel(company_code, start, end)
+    dataset.duration = span
+    dataset.import_data()
+    d_year = dataset.train.index
+    data = np.array(dataset.train['Close'])
+    d = {'year': d_year,
+         'value': data}
+    df = pd.DataFrame(d)
+    del dataset
+
+    return df
+
+
 class IRBankDB(DaoSQLite3):
 
     @staticmethod
@@ -50,6 +67,9 @@ class IRBankDB(DaoSQLite3):
         if self._conn is None:
             self._conn_db()
         return self._curs.execute(sql, (_company_code,))
+
+    def fetch_company_ir_dataset_direct_sql(self, company_code):
+        return self._select_all_irdata(company_code)
 
     def fetch_company_ir_dataset(self, company_code) -> pd.DataFrame:
         result = self._select_all_irdata(company_code)
