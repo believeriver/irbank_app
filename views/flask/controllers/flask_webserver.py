@@ -4,11 +4,12 @@ import os
 import datetime
 import threading
 import logging
+import datetime
 
 PROJECT_PATH = os.path.dirname(os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 sys.path.append(PROJECT_PATH)
-print(PROJECT_PATH)
+# print(PROJECT_PATH)
 
 
 from sqlite3db.controllers.dao_fetch_japanstock import IRBankDB, fetch_stock_price_form_yfinance_api
@@ -47,7 +48,8 @@ NUM_OF_THREAD = 2
 
 # 関数：外部APIからデータを取得する
 def get_data_from_external_api(semaphore, _company_code, label, dataset):
-    # print(_company_code, label)
+    start = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
+    print({'start': start, 'get_data_from_external_api  ': label, 'code': _company_code})
     with semaphore:
         try:
             dataset[label] = fetch_stock_price_form_yfinance_api(
@@ -56,11 +58,14 @@ def get_data_from_external_api(semaphore, _company_code, label, dataset):
             dataset[label] = []
             print({'[error]get_data_from_external_api': e})
         print({'message': 'Data from external API'})
+    end = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
+    print({'end': end, 'get_data_from_external_api  ': label, 'code': _company_code})
 
 
 # 関数：ローカルデータベースからデータを取得する
 def get_data_from_local_database(semaphore, _company_code, label, dataset):
-    # print(_company_code, label)
+    start = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
+    print({'start': start, 'get_data_from_local_database': label, 'code': _company_code})
     _ir_bank_db = IRBankDB()
     with semaphore:
         try:
@@ -69,6 +74,8 @@ def get_data_from_local_database(semaphore, _company_code, label, dataset):
             dataset[label] = []
             print({'[error]get_data_from_local_database': e})
         print({'message': 'Data from local database'})
+    end = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
+    print({'end': end, 'get_data_from_local_database': label, 'code': _company_code})
 
 
 @app.route("/about", methods=["GET", "POST"])
