@@ -1,10 +1,10 @@
 from flask import Flask, redirect, render_template, request, url_for
 import sys
 import os
-import datetime
 import threading
 import logging
 import datetime
+import time
 
 PROJECT_PATH = os.path.dirname(os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -116,6 +116,7 @@ def hello() -> str:
         # print('company_name', company_name)
 
         if company_code != "" and len(company_code) == 4:
+            start = time.time()
             company_code = company_code.strip()
 
             dataset = dict()
@@ -131,7 +132,11 @@ def hello() -> str:
             # print({'dataset by threading': dataset})
             datasets, stock_datasets = dataset['ir_bank'], dataset['yfinance']
 
+            end = time.time()
+            print('[thread time]: {: 4f}'.format(end - start))
+
             if datasets is not None:
+                start = time.time()
                 # temp = datasets
                 temp = datasets.copy()
                 # print({'temp': temp})
@@ -146,6 +151,9 @@ def hello() -> str:
                 except Exception as e:
                     graph_ir_list, copy_data = [], []
                     print({'graph_ir_list': e})
+
+                end = time.time()
+                print('[graph time ]: {: 4f}'.format(end - start))
 
                 return render_template(
                     "pages/dashboard_detail.html", company_code=company_code,
