@@ -5,23 +5,13 @@ import plotly.express as px
 import plotly.io as pio
 
 
-def _fetch_data_frame(datasets):
-    d_year = []
-    data_list = [[] for _ in range(8)]
-    # print(data_list)
-    datasets_copy = []
-    for row in datasets:
-        datasets_copy.append(row)
-        for idx, col in enumerate(row):
-            if idx == 1:
-                d_year.append(col)
-            elif idx > 1:
-                # if idx - 2 <= len(data_list):
-                if col is not None:
-                    data_list[idx - 2].append(float(col))
-                else:
-                    data_list[idx - 2].append(0)
-    return d_year, data_list, datasets_copy
+def create_stock_graph(df, title: str = 'title'):
+    fig = px.line(x=df['year'],
+                  y=df['value'],
+                  title=title,
+                  labels={'x': 'date', 'y': 'stock price'})
+    graph_html = pio.to_html(fig, full_html=False)
+    return graph_html
 
 
 def _create_graph(df, title: str = 'title'):
@@ -29,65 +19,37 @@ def _create_graph(df, title: str = 'title'):
                  x="year",
                  y="value",
                  title=title)
-    # graph_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
-    # return graph_json
     graph_html = pio.to_html(fig, full_html=False)
     return graph_html
 
 
-def create_stock_graph(df, title: str = 'title'):
-    fig = px.line(x=df['year'],
-                  y=df['value'],
-                  labels={'x': 'date', 'y': 'stock price'})
-    # graph_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
-    # return graph_json
-    graph_html = pio.to_html(fig, full_html=False)
-    return graph_html
+def _fetch_data_from_pandas(datasets: pd.DataFrame):
+    # print({'_fetch_data_from_pandas': datasets})
+    x_axis = "年"
+    itme_list = ["売上高(円)", "営業利益率(%)", "EPS", "自己資本率(%)",
+                 "営業活動によるCF(円)", "現金等(円)", "一株配当(円)", "配当性向(%)"]
+    d_list = []
+    for item in itme_list:
+        try:
+            d_list.append([item, datasets[[x_axis, item]]])
+        except Exception as e:
+            print({'[error] _fetch_data_pandas': e})
+
+    # print({'d_list': d_list})
+    return d_list
 
 
-def create_ir_graph_list(datasets):
-    d_year, d_list, d_data = _fetch_data_frame(datasets)
-
-    title_list = ["売上高",
-                  "営業利益率",
-                  "EPS",
-                  "自己資本比率",
-                  "営業活動によるCF",
-                  "現金等",
-                  "一株配当",
-                  "配当性向"]
+def create_ir_graph_list_df(datasets):
+    d_list = _fetch_data_from_pandas(datasets)
 
     fig_list = []
-    for idx, data in enumerate(d_list):
-        # print(data)
-        d = {'year': d_year,
-             'value': data}
+    for item in d_list:
+        title = item[0]
+        d = {'year': item[1].iloc[:, 0],
+             'value': item[1].iloc[:, 1]}
         df = pd.DataFrame(d)
-        if idx < len(title_list):
-            graph_json = _create_graph(df, title_list[idx])
-        else:
-            graph_json = _create_graph(df)
-        fig_list.append(graph_json)
+        graph_html = _create_graph(df, title)
+        fig_list.append(graph_html)
 
-    return fig_list, d_data
+    return fig_list, datasets
 
-
-# graph logic test  --------------------------------------------------#
-def create_graph_test1():
-    df = px.data.medals_wide()
-    fig = px.bar(df,
-                 x="nation",
-                 y=['gold', 'silver', 'bronze'],
-                 title="Wide=FormInput")
-
-    graph_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
-    return graph_json
-
-
-def create_graph_test2():
-    # graph2
-    df = px.data.iris()
-    fig = px.scatter_3d(df, x="sepal_length", y="sepal_width",
-                         z='petal_width', color='species', title='Iris Dataset')
-    graph_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
-    return graph_json

@@ -4,12 +4,12 @@ import os
 
 PROJECT_PATH = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(PROJECT_PATH)
-print(PROJECT_PATH)
+# print(PROJECT_PATH)
 
 from controllers.flask_webserver import server
 import config.settings
 
-logging.basicConfig(filename=config.settings.LOG_FILE, level=logging.INFO)
+logging.basicConfig(filename=config.settings.LOG_FILE, level=logging.ERROR)
 logger = logging.getLogger(__name__)
 
 
