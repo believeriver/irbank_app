@@ -18,22 +18,21 @@ def fetch_index_date(c_list: CompanyData):
     return max_idx, update_day
 
 
-if __name__ == '__main__':
-    debug_flg = True
-
+def main(debug_flg: bool = True):
     company_list = CompanyData()
     start_index = 1
     max_index, update_date = fetch_index_date(company_list)
     print(max_index, update_date)
 
     if debug_flg:
+        print('[DEBUG] debug mode start.')
         max_index = 1
 
     for i in range(start_index, max_index+1):
         print('page=', i)
-        fetch_yahoo_finance = FetchDataFromYahooFinance(i, company_list)
+        fetch_yahoo_finance = FetchDataFromYahooFinance(i, company_list, delay_time=3)
         fetch_yahoo_finance.update_date = update_date
-        fetch_yahoo_finance.fetch_main_soup(delay=3)
+        fetch_yahoo_finance.fetch_soup_main()
         fetch_yahoo_finance.fetch_select_item()
 
         # print(company_list.companies)
@@ -45,15 +44,22 @@ if __name__ == '__main__':
             c_dividend = company['company_dividend']
             c_rank = company['company_rank']
             c_date = company['company_rank_date']
-
-            if debug_flg:
-                print(c_code, c_name)
-
             company = Company.get_or_create(
-                int(c_code), c_name, c_stock, float(c_dividend), int(c_rank), str(c_date)
+                c_code, c_name, c_stock, float(c_dividend), int(c_rank), str(c_date)
             )
 
+            if debug_flg:
+                print(c_rank, c_code, c_name, c_dividend)
+                print(
+                    company.company_dividend_rank,
+                    company.company_code,
+                    company.company_name,
+                    c_dividend,
+                    company.company_dividend_update)
     gc.collect()
 
 
+if __name__ == '__main__':
+    main(True)
+    # main(False)
 

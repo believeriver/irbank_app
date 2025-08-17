@@ -18,8 +18,8 @@ PORT = 8000
 LOG_FILE = 'appserver.log'
 
 # --- DB settings.
-DEBUG = True
-# DEBUG = False
+# DEBUG = True
+DEBUG = False
 
 if DEBUG:
     # User Sqlite3

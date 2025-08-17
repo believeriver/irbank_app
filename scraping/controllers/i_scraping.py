@@ -1,15 +1,19 @@
+import sys
+import os
 from time import sleep
 from typing import List, Optional
 from abc import ABC, abstractmethod
-
 import requests
-from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-
 import pandas as pd
 import gc
+
+from bs4 import BeautifulSoup
+from selenium import webdriver
+
+sys.path.append(os.path.dirname(os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__)))))
+
+from config import settings
 
 
 class IDataSet(ABC):

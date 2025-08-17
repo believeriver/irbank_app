@@ -1,20 +1,26 @@
+import sys
+import os
 import datetime
+import logging
 
 from sqlalchemy import Column, DateTime, Integer, create_engine
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
-import sys
-import os
 
 sys.path.append(os.path.dirname(os.path.dirname(
     os.path.dirname(os.path.abspath(__file__)))))
 
-import config.settings
+from config import settings
+
+logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+logger = logging.getLogger(__name__)
 
 
 class Database(object):
     def __init__(self) -> None:
-        self.engine = create_engine(f"sqlite:///{config.settings.DB_NAME}")
+        self.url = settings.DB_URL
+        self.engine = create_engine(self.url, echo=False)
+        logger.info({'action': 'db.py', 'db': self.url})
         self.connect_db()
 
     def connect_db(self) -> sessionmaker:

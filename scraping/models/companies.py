@@ -13,12 +13,12 @@ from scraping.models.db import BaseDatabase, database
 
 class Company(BaseDatabase):
     __tablename__ = "companies"
-    company_code = Column(Integer)
-    company_name = Column(String)
-    company_stock = Column(String)
-    company_dividend = Column(Float)
-    company_dividend_rank = Column(Integer)
-    company_dividend_update = Column(String)
+    company_code = Column(String(16), nullable=False)
+    company_name = Column(String(100), nullable=False)
+    company_stock = Column(String(32), nullable=False)
+    company_dividend = Column(Float, nullable=False)
+    company_dividend_rank = Column(Integer, nullable=False)
+    company_dividend_update = Column(String(100), nullable=False)
 
     @staticmethod
     def get_or_create(c_code, c_name, c_stock, c_dividend, c_rank, c_date):
@@ -95,7 +95,7 @@ class Company(BaseDatabase):
         return result
 
 
-def test_Company_DB():
+def check_Company_DB():
     c_code = '9986'
     c_name = '蔵王産業'
     c_stock = '2400'
@@ -103,11 +103,15 @@ def test_Company_DB():
     c_rank = '50'
     c_date = '更新日時：2023/08/25 18:40'
     company = Company.get_or_create(
-        int(c_code), c_name, c_stock, float(c_dividend), int(c_rank), c_date
+        c_code, c_name, c_stock, float(c_dividend), int(c_rank), c_date
     )
     data = Company.fetch_code_and_name()
     print(data)
+    print(
+        company.company_code, company.company_name, company.company_dividend, company.company_dividend_update)
+
+    print(Company.fetch_code_and_name_one('9219'))
 
 
 if __name__ == '__main__':
-    test_Company_DB()
+    check_Company_DB()

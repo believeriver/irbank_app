@@ -2,131 +2,172 @@ import gc
 from typing import List
 import sys
 import os
+import logging
+from itertools import chain
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 # print(os.path.dirname(os.path.abspath(__file__)))
 
 from controllers.scraping_url_irbank import CompanyData, FetchDataFromIRBank
-from models.sales import Sales
 from models.companies import Company
-from models.operating_margins import Margins
-from models.eps import EPS
-from models.capital_adequacy import CapitalAdequacy
-from models.cash_flow import CashFlow
-from models.cash_equivalents import CashEquivalents
-from models.cash_dividend import CashDividend
-from models.dividend_ratio import DividendRatio
+from models.financial_data import Financial
+# import utils  # -> include: Company, Financial data model
 
 
-def fetch_companies_list() -> List[int]:
-    result = []
-    dao_data = Company.fetch_code_and_name()
-    for d in dao_data:
-        result.append(d['company_code'])
-    return result
+handler = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter('%(asctime)s:%(name)s:%(levelname)s:%(message)s')
+handler.setFormatter(formatter)
+
+logger = logging.getLogger(__name__)
+logger.propagate = False
+logger.setLevel(logging.INFO)
+# logger.setLevel(logging.DEBUG)
+logger.addHandler(handler)
 
 
-def to_db(c_code, tb_name, tr_data):
-    for data in tr_data:
-        c_year, c_data = data[0], data[1]
-        print(tb_name, c_year, c_data)
-        if tb_name == "売上高":
-            sales = Sales.get_or_create(
-                int(c_code), c_year, c_data)
-        elif tb_name == "営業利益率":
-            op_margin = Margins.get_or_create(
-                int(c_code), c_year, c_data)
-        elif tb_name == "EPS":
-            eps = EPS.get_or_create(
-                int(c_code), c_year, c_data)
-        elif tb_name == "自己資本比率":
-            capital_adequacy = CapitalAdequacy.get_or_create(
-                int(c_code), c_year, c_data)
-        elif tb_name == "営業活動によるCF":
-            cash_flow = CashFlow.get_or_create(
-                int(c_code), c_year, c_data)
-        elif tb_name == "現金等":
-            cash_equivalents = CashEquivalents.get_or_create(
-                int(c_code), c_year, c_data)
-        elif tb_name == "一株配当":
-            if c_data == '-':
-                c_data = 0
-            cash_dividend = CashDividend.get_or_create(
-                int(c_code), c_year, c_data)
-        elif tb_name == "配当性向":
-            if c_data == '-':
-                c_data = 0
-            dividend_ratio = DividendRatio.get_or_create(
-                int(c_code), c_year, c_data)
+class ScrapingIRBank(object):
+    def __init__(self, _start: int, _end: int):
+        self.start_index = _start
+        self.end_index = _end
+        self.dao_company_list = self.fetch_companies_list()
+        self.company_code_list = self.dao_company_list[_start:_end]
+        self.table_items = self.table_item_list()
 
+    @staticmethod
+    def fetch_companies_sorted_by_rank():
+        company_list = Company.fetch_code_and_name()
+        sorted_ranking = sorted(company_list, key=lambda x: x["dividend_rank"])
+        return sorted_ranking
 
-def table_item_list() -> List[str]:
-    items = [
-        "売上高",
-        "営業利益率",
-        "EPS",
-        "自己資本比率",
-        "営業活動によるCF",
-        "現金等",
-        "一株配当",
-        "配当性向"]
-    return items
+    def fetch_companies_list(self) -> List[int]:
+        result = []
+        # dao_data = Company.fetch_code_and_name()
+        dao_data = self.fetch_companies_sorted_by_rank()
+        for d in dao_data:
+            result.append(d['company_code'])
+        return result
 
+    @staticmethod
+    def table_item_list() -> List[str]:
+        items = [
+            "売上高",
+            "営業利益率",
+            "EPS",
+            "自己資本比率",
+            "営業活動によるCF",
+            "現金等",
+            "一株配当",
+            "配当性向"]
+        return items
 
-def main_check_companies_list(debug_flg=False):
-    dao_company_list = fetch_companies_list()
-    if debug_flg:
-        print({'companies_list': dao_company_list})
-
-
-def main_ir_scraping(debug_flg=False):
-
-    dao_company_list = fetch_companies_list()
-
-    if debug_flg:
-        company_code_list = [9986, 9110]
-    else:
-        company_code_list = dao_company_list[1001:1002]
-
-    table_items = table_item_list()
-
-    # fetch companies dataset
-    for index, company_code in enumerate(company_code_list):
-        # scraping
-        company_datasets = CompanyData()
-        fetch_ir_bank = FetchDataFromIRBank(company_datasets, company_code)
-        fetch_ir_bank.fetch_main_soup(delay=1)
-
-        for table_item in table_items:
-            if debug_flg:
-                # table_item = table_items[1]
-                print(company_code, table_item)
-            fetch_ir_bank.fetch_table_data(table_item)
-
-        # write database
+    @staticmethod
+    def fetch_financial_datasets(company_datasets: CompanyData):
+        results = []
         for company in company_datasets.companies:
             c_name = company['company_name']
             c_code = company['company_code']
             tb_name = company['item_name']
             tr_data = company['trend_data']
-            print('write database -> ', c_name, tb_name, '---')
-            to_db(c_code, tb_name, tr_data)
+            logger.debug({
+                "c_name": c_name,
+                "c_code": c_code,
+                "tb_name": tb_name,
+            })
+            trend_datasets = []
+            for item in tr_data:
+                if len(item) == 2:
+                    logger.debug({
+                        "c_code": c_code,
+                        "table_name": tb_name,
+                        "fiscal_year": item[0],
+                        "value": item[1]
+                    })
+                    temp = [c_code, tb_name, item[0][0:4], item[1]]
+                    trend_datasets.append(temp)
+            if not trend_datasets:
+                trend_datasets.append([c_code, tb_name, None, None])
+            results.append(trend_datasets)
+        return results
 
-            # test write csv
-            # fetch_IR_bank.test_to_csv(c_code, tb_name)
+    @staticmethod
+    def marge_financial_datasets(_datasets):
+        data = list(chain.from_iterable(_datasets))
+        temp_dict = {}
+        for c_code, item, fiscal_year, value in data:
+            key = (c_code, fiscal_year)
+            if key[1] is not None:
+                if key not in temp_dict:
+                    # c_code と fiscal_year を保持し、項目は空辞書で初期化
+                    temp_dict[key] = {"company_code": c_code, "fiscal_year": fiscal_year}
+                # 該当項目名で値をセット
+                temp_dict[key][item] = value
 
-        if debug_flg:
-            print(index, 'delete object')
+        # 辞書のリストに変換
+        result_list = list(temp_dict.values())
+        return result_list
 
-        del company_datasets, fetch_ir_bank
+    def save_to_financial_database(self, _dataset):
+        code = _dataset.get("company_code", None)
+        fiscal_year = _dataset.get("fiscal_year", None)
+        sale = _dataset.get(self.table_items[0], None)
+        margin = _dataset.get(self.table_items[1], None)
+        eps = _dataset.get(self.table_items[2], None)
+        equity = _dataset.get(self.table_items[3], None)
+        cashflow = _dataset.get(self.table_items[4], None)
+        equivalents = _dataset.get(self.table_items[5], None)
+        dividend = _dataset.get(self.table_items[6], None)
+        payout = _dataset.get(self.table_items[7], None)
 
-    gc.collect()
+        db_financial = Financial.get_or_create(
+            code, fiscal_year, sale, margin, eps, equity,
+            cashflow, equivalents, dividend, payout)
+        logger.info({
+            "action": "save_financial_database",
+            "company_code": db_financial.company_code,
+            "fiscal_year": db_financial.fiscal_year,
+        })
+
+    def start(self):
+        # fetch companies dataset
+        for index, company_code in enumerate(self.company_code_list):
+            # scraping
+            logger.info({"index": index, "code": company_code})
+            company_datasets = CompanyData()
+            fetch_ir_bank = FetchDataFromIRBank(
+                company_datasets, company_code)
+            fetch_ir_bank.fetch_main_soup(delay=1)
+
+            for table_item in self.table_items:
+                logger.debug({
+                    "company_code": company_code,
+                    "table": table_item,
+                })
+                fetch_ir_bank.fetch_table_data(table_item)
+
+            # write database
+            financial_datasets = self.fetch_financial_datasets(company_datasets)
+            dao_datasets = self.marge_financial_datasets(financial_datasets)
+
+            for record in dao_datasets:
+                logger.debug(record)
+                self.save_to_financial_database(record)
+
+            del company_datasets, fetch_ir_bank, financial_datasets, dao_datasets
+
+        gc.collect()
 
 
 if __name__ == '__main__':
-    debug = False
-    main_check_companies_list(debug)
-    main_ir_scraping(debug)
+    # main(0, 1)
+    ir = ScrapingIRBank(200, 205)
+    # ir = ScrapingIRBank(20, 25)
+    ir.start()
+    # test
+    # daos = Financial.get_financials_by_company_code(str(9986))
+    # for dao in daos:
+    #     logger.info(dao)
+
+
 
 
 

@@ -4,7 +4,14 @@ config/start_streamlit
 config/ufw_settings
 sqlite3db/IRBank_database.sql
 sqlite3db/test/
+sqlite3db/archive/
 sqlite3db/controllers/sample
+scraping/controllers/archive
+scraping/archive
+scraping/models/archive
+models/archive
 venv
 views/bk/
 views/flask/controllers/lib/sklearn_sample
+views/flask/controllers/archive
+archive

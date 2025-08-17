@@ -1,14 +1,14 @@
+import sys
+import os
 from time import sleep
 import gc
 from typing import Optional
 from selenium.webdriver.common.by import By
-import sys
-import os
 
 sys.path.append(os.path.dirname(os.path.dirname(
     os.path.dirname(os.path.abspath(__file__)))))
 
-from scraping.controllers.lib.i_scraping import IDataSet, IFetchDataFromUrl, ISaveToFile
+from scraping.controllers.i_scraping import IDataSet, IFetchDataFromUrl, ISaveToFile
 
 
 class CompanyData(IDataSet):
@@ -113,7 +113,13 @@ class FetchDataFromIRBank(IFetchDataFromUrl):
             tb_titles = item.select_one("h2")
             # print(idx, tb_titles.text)
             item_title = tb_titles.text.split('#')[0]
-            if item_title == table_name:
+            # print(item_title)
+            if table_name == "売上高":
+                table_name_list = [table_name, "収益"]
+            else:
+                table_name_list = [table_name]
+            #  item_title == table_name:
+            if item_title in table_name_list:
                 # print(tb_titles.text)
                 item_year = item.select("dt")
                 item_dd = item.select("dd")
@@ -149,6 +155,7 @@ class FetchDataFromIRBank(IFetchDataFromUrl):
             "一株配当": 'c_24',
             "配当性向": 'c_25'
         }
+        print(d_items["売上高"])
         # check
         table_soup = self._soup_main.find('div', id=d_items[table_name])
         # search table title
@@ -191,9 +198,9 @@ if __name__ == '__main__':
     company_list = CompanyData()
 
     # select item
-    item = data_items[5]
+    item = data_items[0]
 
-    fetch_IR_bank = FetchDataFromIRBank(company_list, 9110)
+    fetch_IR_bank = FetchDataFromIRBank(company_list, 2914)
     fetch_IR_bank.fetch_main_soup(delay=1)
     fetch_IR_bank.fetch_table_data(item)
     # print(fetch_IR_bank.dataset.companies)
@@ -202,7 +209,7 @@ if __name__ == '__main__':
     print(company_list.companies)
 
     # fetch_IR_bank.test_to_csv(9986, item)
-    fetch_IR_bank.test_to_csv(9110, item)
+    # fetch_IR_bank.test_to_csv(9110, item)
 
     gc.collect()
 
