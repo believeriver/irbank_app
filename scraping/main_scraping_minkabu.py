@@ -3,6 +3,7 @@ import os
 import logging
 from typing import List
 import gc
+from optparse import OptionParser
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -32,7 +33,7 @@ def numeric_or_none(val):
         return None
 
 
-def main(_start: int = 1, _end: int = 10):
+def scraping(_start: int = 1, _end: int = 10):
     company_code_list = []
     company_list = Company.fetch_code_and_name()
     logger.debug({'max number of companies': len(company_list)})
@@ -67,10 +68,28 @@ def main(_start: int = 1, _end: int = 10):
             })
 
 
+def main():
+    usage = 'usage: %prog -s <start index> -e <end index>'
+    parser = OptionParser(usage=usage)
+    parser.add_option('-s', '--start', action='store', type='int', dest='start', help='start index')
+    parser.add_option('-e', '--end', action='store', type='int', dest='end', help='end index')
+    options, args = parser.parse_args()
+
+    start_index = int(options.start)
+    end_index = int(options.end)
+    logger.info({
+        'start': start_index,
+        'end': end_index,
+    })
+
+    if start_index is None or end_index is None:
+        raise Exception("start and end index are required.")
+
+    scraping(start_index, end_index)
+
+
 if __name__ == '__main__':
-    # max = 3372
-    main(20, 25)
-    # main(4, 500)
-    # main(0, 9)
-    # main(600, 601)
+    # max index : 3372
+    main()
+
 

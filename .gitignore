@@ -10,6 +10,7 @@ models/archive
 models/__pycache__
 scraping/archive
 scraping/__pycache__
+scraping/scripts
 scraping/controllers/archive
 scraping/controllers/__pycache__
 scraping/models/archive

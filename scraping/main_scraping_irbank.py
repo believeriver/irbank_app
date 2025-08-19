@@ -3,6 +3,7 @@ from typing import List
 import sys
 import os
 import logging
+from optparse import OptionParser
 from itertools import chain
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -157,15 +158,34 @@ class ScrapingIRBank(object):
         gc.collect()
 
 
+def main():
+    usage = 'usage: %prog -s <start index> -e <end index>'
+    parser = OptionParser(usage=usage)
+    parser.add_option('-s', '--start', action='store', type='int', dest='start', help='start index')
+    parser.add_option('-e', '--end', action='store', type='int', dest='end', help='end index')
+    options, args = parser.parse_args()
+
+    start_index = int(options.start)
+    end_index = int(options.end)
+    logger.info({
+        'start': start_index,
+        'end': end_index,
+    })
+
+    if start_index is None or end_index is None:
+        raise Exception("start and end index are required.")
+
+    scraping = ScrapingIRBank(start_index, end_index)
+    scraping.start()
+
+    gc.collect()
+
+
 if __name__ == '__main__':
-    # main(0, 1)
-    ir = ScrapingIRBank(200, 205)
-    # ir = ScrapingIRBank(20, 25)
-    ir.start()
-    # test
-    # daos = Financial.get_financials_by_company_code(str(9986))
-    # for dao in daos:
-    #     logger.info(dao)
+    # max index : 3372
+    main()
+
+
 
 
 

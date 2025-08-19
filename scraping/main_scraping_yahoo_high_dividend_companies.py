@@ -1,12 +1,24 @@
 import gc
 import sys
 import os
+import logging
+from optparse import OptionParser
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 # print(os.path.dirname(os.path.abspath(__file__)))
 
 from controllers.scraping_url_yahoofinace import CompanyData, FetchDataFromYahooFinance
 from models.companies import Company
+
+handler = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter('%(asctime)s:%(name)s:%(levelname)s:%(message)s')
+handler.setFormatter(formatter)
+
+logger = logging.getLogger(__name__)
+# logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
+logger.propagate = False
+logger.addHandler(handler)
 
 
 def fetch_index_date(c_list: CompanyData):
@@ -18,7 +30,7 @@ def fetch_index_date(c_list: CompanyData):
     return max_idx, update_day
 
 
-def main(debug_flg: bool = True):
+def scraping(debug_flg: bool = True):
     company_list = CompanyData()
     start_index = 1
     max_index, update_date = fetch_index_date(company_list)
@@ -59,7 +71,29 @@ def main(debug_flg: bool = True):
     gc.collect()
 
 
+def main():
+    usage = 'usage: %prog -d/--debug'
+    parser = OptionParser(usage=usage)
+    parser.add_option(
+        '-d', '--debug',
+        action='store_true',
+        dest='debug',
+        default=False,
+        help='debug flag True-> -d')
+    options, args = parser.parse_args()
+
+    debug = options.debug
+    logger.info({
+        'start': debug,
+    })
+
+    if debug is None:
+        raise Exception("start and end index are required.")
+
+    scraping(debug)
+
+
 if __name__ == '__main__':
-    main(True)
+    main()
     # main(False)
 
