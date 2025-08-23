@@ -1,61 +1,21 @@
 {% extends "base_dashboard.html" %}
 
 {% block content_graph %}
-<h3>{{ company_code }} : {{ company_name }}</h3>
-<h5>株価の推移は以下の通り。</h5>
-<div id="graph1">{{ graph_stock|safe }}</div>
+<div class="container">
+    <div class="d-flex justify-content-center">
+        <div style="width: 90%;">
+            <h3>{{ company_code }} : {{ company_name }}</h3>
+            <h5>株価の推移は以下の通り。</h5>
+            <div id="graph1">{{ graph_stock|safe }}</div>
 
-<h3>IR情報</h3>
-<div class="table-responsive">
-    <table class="table table-sm ">
-        <thead>
-            <tr>
-                <th scope="col">項目</th>
-                <th scope="col">着眼点</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td scope="col">売上高</td>
-                <td>売上高は、ブレが小さく右肩上がりか？</td>
-            </tr>
-            <tr>
-                <td scope="col">営業利益率</td>
-                <td>営業利益率は１０％以上か？</td>
-            </tr>
-            <tr>
-                <td scope="col">EPS</td>
-                <td>EPSは右肩上がりか？（EPS:一株当たり利益）</td>
-            </tr>
-            <tr>
-                <td scope="col">自己資本比率</td>
-                <td>自己資本比率は最低でも４０％以上か？（６０％以上が理想的。８０％以上だと最高）</td>
-            </tr>
-            <tr>
-                <td scope="col">営業活動によるCF</td>
-                <td>営業活動CFは毎期黒字で右肩上がりか？</td>
-            </tr>
-            <tr>
-                <td scope="col">現金等</td>
-                <td>現金などは、増えていくのが理想的</td>
-            </tr>
-            <tr>
-                <td scope="col">一株配当</td>
-                <td>一株当たりの配当金は、安定性と成長性を確認する</td>
-            </tr>
-            <tr>
-                <td scope="col">配当性向</td>
-                <td>３０〜５０％が健全。高すぎるのは無理している可能性があり注意。</td>
-            </tr>
-        </tbody>
-    </table>
+            <h3>IR情報</h3>
+            {% for graph in graph_ir_list: %}
+                {{ graph |safe }}<br>
+            {% endfor %}
+            <canvas class="my-4" id="myChart" width="100%" height="380"></canvas>
+        </div>
+    </div>
 </div>
-
-{% for graph in graph_ir_list: %}
-    {{ graph |safe }}
-{% endfor %}
-<canvas class="my-4" id="myChart" width="900" height="380"></canvas>
-
 <!-- plotly CDN -->
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 {% endblock %}
