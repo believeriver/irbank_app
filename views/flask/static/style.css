@@ -1,3 +1,4 @@
+/*
 body, input{
     font-size: 20px
 }
@@ -14,4 +15,32 @@ div.display{
 form {
     margin-top: 30px;
     margin-bottom: 30px;
+}
+*/
+
+/*2025.08.23*/
+/* .sticky-header th {
+  position: sticky;
+  top: 0;
+  background-color: white;
+  z-index: 10;
+}
+*/
+table {
+  border-collapse: separate; /* collapseから変更 */
+  border-spacing: 0;         /* セル間の隙間は無し */
+}
+
+th, td {
+  padding: 6px 12px; /* 適切に調整 */
+  border: 0px solid #dee2e6; /* Bootstrapのデフォルトの枠線 */
+  vertical-align: middle;
+}
+
+.sticky-header th {
+  position: sticky;
+  top: 0;
+  background-color: white; /* ヘッダー背景色 */
+  z-index: 10;  /* 重なり優先度 */
+  border-bottom: 2px solid #dee2e6; /* ヘッダー区切りを少し太めに */
 }
