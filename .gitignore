@@ -15,7 +15,7 @@ scraping/controllers/archive
 scraping/controllers/__pycache__
 scraping/models/archive
 scraping/models/__pycache__
-sqlite3db/IRBank_database.sql
+sqlite3db/
 sqlite3db/archive/
 views/bk/
 views/flask/archive
