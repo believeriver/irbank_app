@@ -1,16 +1,20 @@
 import logging
 import os
 import sys
+import pandas as pd
+import streamlit as st
+import datetime
 
-PROJECT_PATH = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+PROJECT_PATH = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # print(PROJECT_PATH)
 sys.path.append(PROJECT_PATH)
 
-import pandas as pd
-import streamlit as st
+# from sqlite3db.controllers.dao_fetch_japanstock import IRBankDB
+# from sqlite3db.controllers.dao_fetch_companies import Companies, FetchCompany, SearchCompanyCode
 
-from sqlite3db.controllers.dao_fetch_japanstock import IRBankDB
-from sqlite3db.controllers.dao_fetch_companies import Companies, FetchCompany, SearchCompanyCode
+from models.fetch_japnese_stock_from_finence_api import fetch_stock_dataframe
+from models.fetch_company_info_from_database import DataAccessObject, Company
 
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 logger = logging.getLogger(__name__)
@@ -18,16 +22,22 @@ logger = logging.getLogger(__name__)
 
 @st.cache_data
 def fetch_japan_ir_bank_database(code) -> [pd.DataFrame, pd.DataFrame]:
-    db = IRBankDB()
+    db = DataAccessObject()
 
     try:
-        _ir_bank_df = db.fetch_company_ir_dataset(code)
+        # _ir_bank_df = db.fetch_company_info_by_code(code)
+        _ir_bank_df = db.fetch_financials_dataframe_by_code(code)
+        logger.debug(_ir_bank_df)
     except:
         st.error('IR データの取得でエラーが発生しました')
         _ir_bank_df = None
 
     try:
-        _stock_df = db.fetch_stock_price_data(code)
+        _stock_df = fetch_stock_dataframe(
+                code,
+                start='2010-01-01',
+                end=datetime.date.today(),
+                span=30)
     except:
         st.error('yahoo financeのデータ取得でエラーが発生しました')
         _stock_df = None
@@ -39,9 +49,19 @@ def fetch_company_code(_company_name) -> pd.DataFrame:
     if _company_name == '':
         return None
 
-    db = SearchCompanyCode()
+    db = Company()
     try:
-        _company_df = db.fetch_company_dataset(_company_name)
+        result = db.fetch_code_and_name_by_name(_company_name)
+        logger.info(result)
+        dataset = []
+        for row in result:
+            d_row = {
+                '企業コード': str(row['company_code']),
+                '企業名': row['company_name'],
+            }
+            dataset.append(d_row)
+        _company_df = pd.DataFrame(dataset)
+
         if _company_df.empty:
             return '該当なし'
         # logging.info({'action': 'fetch_company_code', '_company_df': _company_df})
@@ -90,10 +110,27 @@ def start_streamlit_db():
     st.sidebar.markdown(link_ir_bank, unsafe_allow_html=True)
 
     # main
+    dao = DataAccessObject()
     if company == '':
-        companies_dataset = Companies()
-        df = companies_dataset.companies_dataset()
-        st.write(df)
+        rows = dao.fetch_companies_info()
+        dataset = []
+        for row in rows:
+            d_row = {
+                '企業コード': row['company_code'],
+                '企業名': row['company_name'],
+                '業種': row['industry'],
+                '株価(円)': row['company_stock'],
+                '配当率(%)': row['company_dividend'],
+                '配当ランク': row['dividend_rank'],
+                '更新日': row['update_date'],
+            }
+            dataset.append(d_row)
+        df = pd.DataFrame(dataset)
+        # st.dataframe(df, width=1200, height=400)
+        # st.set_page_config(layout="wide")
+        st.dataframe(df, use_container_width=True)
+        # st.write(df)
+
     else:
         try:
             company = int(company)
@@ -103,8 +140,29 @@ def start_streamlit_db():
         try:
             # print('company: ', company)
             logging.info({'company_code': company})
-            company_dataset = FetchCompany()
-            df = company_dataset.fetch_company_dataset(int(company))
+
+            # company_dataset = FetchCompany()
+            # df = company_dataset.fetch_company_dataset(int(company))
+            rows = dao.fetch_company_info_by_code(company)
+            dataset = []
+            descriptions = []
+            for row in rows:
+                d_row = {
+                    '企業コード': row['company_code'],
+                    '企業名': row['company_name'],
+                    '業種': row['industry'],
+                    '株価(円)': row['company_stock'],
+                    '配当率(%)': row['company_dividend'],
+                    '配当ランク': row['dividend_rank'],
+                    '更新日': row['update_date'],
+                }
+                ds_row = {
+                    '企業について': row['description']
+                }
+                dataset.append(d_row)
+                descriptions.append(ds_row)
+            df = pd.DataFrame(dataset)
+            df_description = pd.DataFrame(descriptions)
             if df.empty:
                 st.error('データがありません。')
             else:
@@ -112,10 +170,9 @@ def start_streamlit_db():
                 stock_df = stock_df.set_index('year')
                 stock_df = stock_df.rename(columns={'value': 'Stock Price(yen)'})
                 st.write('### 企業名と配当率', df)
-                # st.write('### IRBANK情報抽出', ir_bank_df)
-                # st.write('### Y financeより株価(円)データ', stock_df)
+                st.write(df_description)
 
-                st.write('### yahoo financeより株価（円）のトレンドグラフ')
+                st.write('### 株価（円）のトレンドグラフ')
                 st.line_chart(stock_df)
 
                 st.write('### IR 参考情報')

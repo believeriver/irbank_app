@@ -94,8 +94,27 @@ class Company(BaseDatabase):
             })
         return result
 
+    @staticmethod
+    def fetch_code_and_name_by_name(partial_name: str) -> List[dict]:
+        result = []
+        session = database.connect_db()
+        # 部分一致（LIKE）検索
+        rows = session.query(Company).filter(
+            Company.company_name.like(f'%{partial_name}%')
+        ).all()
+        for row in rows:
+            result.append({
+                'company_code': row.company_code,
+                'company_name': row.company_name,
+                'company_stock': row.company_stock,
+                'company_dividend': row.company_dividend,
+                'dividend_rank': row.company_dividend_rank,
+                'update_date': row.company_dividend_update
+            })
+        return result
 
-def check_Company_DB():
+
+def check_company_db():
     c_code = '9986'
     c_name = '蔵王産業'
     c_stock = '2400'
@@ -114,4 +133,4 @@ def check_Company_DB():
 
 
 if __name__ == '__main__':
-    check_Company_DB()
+    check_company_db()
