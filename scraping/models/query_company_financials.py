@@ -1,7 +1,7 @@
 import sys
 import os
 
-from sqlalchemy import and_
+from sqlalchemy import and_, or_
 
 sys.path.append(os.path.dirname(os.path.dirname(
     os.path.dirname(os.path.abspath(__file__)))))
@@ -15,11 +15,6 @@ from scraping.models.informations import Information
 
 class CompanyFinancial(BaseDatabase):
     __tablename__ = "company_financial"
-
-    # def __init__(self, company_code):
-    #     super().__init__()
-    #     self.code = company_code
-    #     self.company_dataset = self.get_financial_by_code(company_code)
 
     def get_financial_by_code(self, code):
         result = []
@@ -162,6 +157,59 @@ class CompanyInformation(BaseDatabase):
             .select_from(Information)
             .outerjoin(Company, Information.company_code == Company.company_code)
         )
+        rows = query.all()
+        _session.close()
+        return rows
+
+    def get_information_by_code_or_name(self, code=None):
+        result = []
+        rows = self._get_information_outer_join_or(code)
+        for row in rows:
+            if row:
+                result.append({
+                    "company_code": row.company_code,
+                    "company_name": row.company_name,
+                    'industry': row.industry,
+                    'description': row.description,
+                    'per': row.per,
+                    'psr': row.psr,
+                    'pbr': row.pbr,
+                    'company_stock': row.company_stock,
+                    'company_dividend': row.company_dividend,
+                    'dividend_rank': row.company_dividend_rank,
+                    'update_date': row.company_update_date,
+                })
+        return result
+
+    @staticmethod
+    def _get_information_outer_join_or(search_word=None):
+        _session = database.connect_db()
+        select_columns = [
+            Company.company_code.label("company_code"),
+            Company.company_name.label("company_name"),
+            Information.industry.label("industry"),
+            Information.description.label("description"),
+            Information.per.label("per"),
+            Information.psr.label("psr"),
+            Information.pbr.label("pbr"),
+            Company.company_stock.label("company_stock"),
+            Company.company_dividend.label("company_dividend"),
+            Company.company_dividend_rank.label("company_dividend_rank"),
+            Company.company_dividend_update.label("company_update_date"),
+        ]
+        query = (
+            _session.query(*select_columns)
+            .select_from(Information)
+            .outerjoin(Company, Information.company_code == Company.company_code)
+        )
+        if search_word:
+            like_word = f"%{search_word}%"
+            query = query.filter(
+                or_(
+                    Company.company_code.like(like_word),
+                    Company.company_name.like(like_word)
+                )
+            )
         rows = query.all()
         _session.close()
         return rows

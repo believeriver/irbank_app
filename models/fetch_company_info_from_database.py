@@ -34,10 +34,12 @@ class DataAccessObject(object):
         return self.company_obj.fetch_code_and_name_one(_company_code)
 
     def fetch_company_info_by_code(self, _company_code):
-        return self.company_info_obj.get_information_by_code(_company_code)
+        # return self.company_info_obj.get_information_by_code(_company_code)
+        return self.company_info_obj.get_information_by_code_or_name(_company_code)
 
     def fetch_companies_info(self):
-        company_info = self.company_info_obj.get_information_by_code()
+        # company_info = self.company_info_obj.get_information_by_code()
+        company_info = self.company_info_obj.get_information_by_code_or_name()
         sorted_info = sorted(company_info, key=lambda x: x["dividend_rank"])
         return sorted_info
 
